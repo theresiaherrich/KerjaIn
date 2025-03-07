@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Program;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ProgramResource;
+use App\Http\Resources\CompanyResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 
-class ProgramController extends Controller
+class CompanyController extends Controller
 {
     /**
      * index
@@ -19,9 +19,9 @@ class ProgramController extends Controller
     public function index()
     {
 
-        $Program = Program::latest()->paginate(5);
+        $Company = Company::latest()->paginate(5);
 
-        return new ProgramResource( 'List Data Program', $Program);
+        return new CompanyResource('List Data Company', $Company);
     }
 
     /**
@@ -33,34 +33,34 @@ class ProgramController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'logo'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'name'     => 'required',
-            'date'   => 'required',
-            'price'   => 'required',
+            'location'     => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $imagePath = $this->uploadToSupabase($request->file('image'));
+        $imagePath = $this->uploadToSupabase($request->file('logo'));
 
 
-        $Program = Program::create([
-            'image'     => $imagePath,
+        $Company = Company::create([
+            'logo'     => $imagePath,
             'name'     => $request->name,
-            'date'   => $request->date,
-            'price'   => $request->price,
+            'location'     => $request->location,
+            'description'   => $request->description,
         ]);
 
-        return new ProgramResource( 'Data Program Berhasil Ditambahkan!', $Program);
+        return new CompanyResource( 'Data Company Berhasil Ditambahkan!', $Company);
     }
 
     public function show($id)
     {
-        $Program = Program::find($id);
+        $Company = Company::find($id);
 
-        return new ProgramResource( 'Detail Data Program!', $Program);
+        return new CompanyResource( 'Detail Data Company!', $Company);
     }
 
     public function update(Request $request, $id)
@@ -68,50 +68,49 @@ class ProgramController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'     => 'required',
-            'date'   => 'required',
-            'price'   => 'required',
+            'location'     => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $Program = Program::find($id);
+        $Company = Company::find($id);
 
-        if ($request->hasFile('image')) {
+        if ($request->hasFile('logo')) {
 
-            $imagePath = $this->uploadToSupabase($request->file('image'));
-            $this->deleteFromSupabase($Program->image);
+            $imagePath = $this->uploadToSupabase($request->file('logo'));
+            $this->deleteFromSupabase($Company->logo);
 
-            $Program->update([
-                'image'     => $imagePath,
+            $Company->update([
+                'logo'     => $imagePath,
                 'name'     => $request->name,
-                'date'   => $request->date,
-                'price'   => $request->price,
+                'location'     => $request->location,
+                'description'   => $request->description,
             ]);
-
         } else {
 
-            $Program->update([
-               'name'     => $request->name,
-                'date'   => $request->date,
-                'price'   => $request->price,
+            $Company->update([
+                'name'     => $request->name,
+                'location'     => $request->location,
+                'description'   => $request->description,
             ]);
         }
 
-        return new ProgramResource( 'Data Program Berhasil Diubah!', $Program);
+        return new CompanyResource( 'Data Company Berhasil Diubah!', $Company);
     }
 
     public function destroy($id)
     {
 
-        $Program = Program::find($id);
+        $Company = Company::find($id);
 
-        $this->deleteFromSupabase($Program->image);
+        $this->deleteFromSupabase($Company->logo);
 
-        $Program->delete();
+        $Company->delete();
 
-        return new ProgramResource( 'Data Program Berhasil Dihapus!', null);
+        return new CompanyResource(true, 'Data Company Berhasil Dihapus!', null);
     }
 
     private function uploadToSupabase($file)

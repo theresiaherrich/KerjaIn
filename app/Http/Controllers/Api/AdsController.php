@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Program;
+use App\Models\Ads;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ProgramResource;
+use App\Http\Resources\AdsResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 
-class ProgramController extends Controller
+class AdsController extends Controller
 {
     /**
      * index
@@ -19,9 +19,9 @@ class ProgramController extends Controller
     public function index()
     {
 
-        $Program = Program::latest()->paginate(5);
+        $Ads = Ads::latest()->paginate(5);
 
-        return new ProgramResource( 'List Data Program', $Program);
+        return new AdsResource( 'List Data Ads', $Ads);
     }
 
     /**
@@ -35,8 +35,7 @@ class ProgramController extends Controller
         $validator = Validator::make($request->all(), [
             'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'name'     => 'required',
-            'date'   => 'required',
-            'price'   => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -46,21 +45,20 @@ class ProgramController extends Controller
         $imagePath = $this->uploadToSupabase($request->file('image'));
 
 
-        $Program = Program::create([
+        $Ads = Ads::create([
             'image'     => $imagePath,
             'name'     => $request->name,
-            'date'   => $request->date,
-            'price'   => $request->price,
+            'description'   => $request->description,
         ]);
 
-        return new ProgramResource( 'Data Program Berhasil Ditambahkan!', $Program);
+        return new AdsResource( 'Data Ads Berhasil Ditambahkan!', $Ads);
     }
 
     public function show($id)
     {
-        $Program = Program::find($id);
+        $Ads = Ads::find($id);
 
-        return new ProgramResource( 'Detail Data Program!', $Program);
+        return new AdsResource( 'Detail Data Ads!', $Ads);
     }
 
     public function update(Request $request, $id)
@@ -68,50 +66,47 @@ class ProgramController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'     => 'required',
-            'date'   => 'required',
-            'price'   => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $Program = Program::find($id);
+        $Ads = Ads::find($id);
 
         if ($request->hasFile('image')) {
 
             $imagePath = $this->uploadToSupabase($request->file('image'));
-            $this->deleteFromSupabase($Program->image);
+            $this->deleteFromSupabase($Ads->image);
 
-            $Program->update([
+            $Ads->update([
                 'image'     => $imagePath,
                 'name'     => $request->name,
-                'date'   => $request->date,
-                'price'   => $request->price,
+                'description'   => $request->description,
             ]);
 
         } else {
 
-            $Program->update([
+            $Ads->update([
                'name'     => $request->name,
-                'date'   => $request->date,
-                'price'   => $request->price,
+                'description'   => $request->description,
             ]);
         }
 
-        return new ProgramResource( 'Data Program Berhasil Diubah!', $Program);
+        return new AdsResource( 'Data Ads Berhasil Diubah!', $Ads);
     }
 
     public function destroy($id)
     {
 
-        $Program = Program::find($id);
+        $Ads = Ads::find($id);
 
-        $this->deleteFromSupabase($Program->image);
+        $this->deleteFromSupabase($Ads->image);
 
-        $Program->delete();
+        $Ads->delete();
 
-        return new ProgramResource( 'Data Program Berhasil Dihapus!', null);
+        return new AdsResource( 'Data Ads Berhasil Dihapus!', null);
     }
 
     private function uploadToSupabase($file)
@@ -165,4 +160,5 @@ class ProgramController extends Controller
         throw new \Exception('Failed to delete file from Supabase: ' . $response->body());
     }
 }
+
 }

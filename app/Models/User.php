@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Profile;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,4 +58,8 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
 }
