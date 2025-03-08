@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\AdsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\PaymentController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -38,4 +38,11 @@ Route::apiResource('/programs',App\Http\Controllers\Api\ProgramController::class
 Route::apiResource('/stories',App\Http\Controllers\Api\StoryController::class);
 Route::apiResource('/testimonies',App\Http\Controllers\Api\TestimonyController::class);
 Route::apiResource('/types',App\Http\Controllers\Api\TypeController::class);
+
+
+Route::middleware('auth:api')->group(function () {
+    Route::post('/payments', [PaymentController::class, 'create']);
+});
+
+Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
 
