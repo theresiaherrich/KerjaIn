@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Http;
 
 class CompanyController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy', 'index']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,6 @@ class CompanyController extends Controller
         return new CompanyResource('List Data Company', $Company);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

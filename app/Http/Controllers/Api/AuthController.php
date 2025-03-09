@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
 
+
+
 class AuthController extends Controller
 {
 
@@ -57,7 +59,7 @@ class AuthController extends Controller
 
     public function me()
     {
-    $user = auth()->user();
+    $user = auth('api')->user();
     if (!$user) {
         return response()->json(['error' => 'Unauthorized'], 401);
     }
@@ -67,16 +69,15 @@ class AuthController extends Controller
 
     public function logout()
     {
-    auth()->invalidate(true); // Buat token menjadi invalid
-    auth()->logout(); // Logout pengguna
-
+    auth('api')->invalidate(true);
+    auth('api')->logout();
     return response()->json(['message' => 'berhasil logged out']);
     }
 
 
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(auth('api')->refresh());
     }
 
     protected function respondWithToken($token)
@@ -84,7 +85,9 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
+
+
 }

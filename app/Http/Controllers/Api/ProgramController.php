@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Http;
 
 class ProgramController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,6 @@ class ProgramController extends Controller
         return new ProgramResource( 'List Data Program', $Program);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

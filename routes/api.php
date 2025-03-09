@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PaymentController;
@@ -11,6 +13,8 @@ use App\Http\Controllers\Api\PaymentController;
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/select-program', [UserController::class, 'selectProgram'])->name('selectProgram');
+
 // Route::post('/logout', [AuthController::class,'logout']);
 // Route::post('/refresh', [AuthController::class,'refresh']);
 
@@ -45,4 +49,6 @@ Route::middleware('auth:api')->group(function () {
 });
 
 Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
+
+
 

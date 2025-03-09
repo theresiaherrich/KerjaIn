@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class TypeController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,7 @@ class TypeController extends Controller
         return new TypeResource('List Data Type', $Type);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

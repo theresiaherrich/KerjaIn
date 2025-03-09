@@ -11,10 +11,12 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
+        'program_id',
         'order_id',
         'amount',
+        'phone',
+        'voucher_code',
         'status',
-        'payment_type',
         'response',
     ];
 
@@ -22,8 +24,15 @@ class Payment extends Model
         'response' => 'array',
     ];
 
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relasi ke Product
+    public function product()
+    {
+        return $this->belongsTo(Program::class);
     }
 }

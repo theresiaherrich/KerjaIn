@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class PolicyController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,7 @@ class PolicyController extends Controller
         return new PolicyResource('List Data Policy', $Policy);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

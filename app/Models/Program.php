@@ -11,5 +11,10 @@ class Program extends Model
 
     protected $table = 'programs';
     protected $fillable = ['image', 'name', 'date', 'price'];
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
 

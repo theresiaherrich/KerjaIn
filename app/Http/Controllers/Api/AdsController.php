@@ -11,11 +11,14 @@ use Illuminate\Support\Facades\Http;
 
 class AdsController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
+
     public function index()
     {
 
@@ -24,12 +27,7 @@ class AdsController extends Controller
         return new AdsResource( 'List Data Ads', $Ads);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

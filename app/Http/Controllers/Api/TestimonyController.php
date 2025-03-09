@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class TestimonyController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,6 @@ class TestimonyController extends Controller
         return new TestimonyResource( 'List Data Testimony', $Testimony);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

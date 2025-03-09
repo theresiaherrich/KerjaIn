@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class CommunityController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy', 'index']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,7 @@ class CommunityController extends Controller
         return new CommunityResource( 'List Data Community', $Community);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

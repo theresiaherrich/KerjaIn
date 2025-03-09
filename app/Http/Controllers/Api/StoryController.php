@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class StoryController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,6 @@ class StoryController extends Controller
         return new StoryResource( 'List Data Story', $Story);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

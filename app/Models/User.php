@@ -23,6 +23,8 @@ class User extends Authenticatable implements JWTSubject
         'username',
         'email',
         'password',
+        'selected_program_id',
+        'role'
     ];
 
     /**
@@ -62,4 +64,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(Profile::class);
     }
+
+    public function selectedProgram()
+{
+    return $this->belongsTo(Program::class, 'selected_program_id');
+}
+
 }

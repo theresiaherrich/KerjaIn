@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Http;
 
 class ArticleController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
+    }
+
     public function index()
     {
 
@@ -24,12 +26,7 @@ class ArticleController extends Controller
         return new ArticleResource( 'List Data Article', $Article);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

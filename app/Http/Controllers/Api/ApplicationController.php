@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\Http;
 
 class ApplicationController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['index','show']);
+    }
+
     public function index()
     {
 
@@ -26,12 +28,7 @@ class ApplicationController extends Controller
         return new ApplicationResource( 'List Data Application', $Application);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -98,9 +95,11 @@ class ApplicationController extends Controller
         $disability = Disability::where('type', $request->disability_type)->first();
 
         if ($request->hasFile('cv')) {
+            $this->deleteFromSupabase($application->cv);
             $application->cv = $this->uploadToSupabase($request->file('cv'));
         }
         if ($request->hasFile('cover_letter')) {
+            $this->deleteFromSupabase($application->cover_letter);
             $application->cover_letter = $this->uploadToSupabase($request->file('cover_letter'));
         }
 
@@ -120,6 +119,11 @@ class ApplicationController extends Controller
     {
 
         $Application = Application::find($id);
+
+        $this->deleteFromSupabase($Application->cv);
+        $this->deleteFromSupabase($Application->cover_letter);
+
+
 
         $Application->delete();
 
@@ -155,6 +159,28 @@ class ApplicationController extends Controller
     return "$supabaseUrl/storage/v1/object/public/$bucketName/$filePath";
 }
 
+private function deleteFromSupabase($fileUrl)
+{
+    $supabaseUrl = env('SUPABASE_URL');
+    $supabaseKey = env('SUPABASE_KEY');
+    $bucketName = env('SUPABASE_BUCKET', 'files');
+
+    if (!$supabaseUrl || !$supabaseKey) {
+        throw new \Exception('Supabase URL atau Key tidak ditemukan di .env');
+    }
+
+    // Ambil path file dari URL Supabase
+    $filePath = str_replace("$supabaseUrl/storage/v1/object/public/$bucketName/", '', $fileUrl);
+
+    $response = Http::withHeaders([
+        'apikey'        => $supabaseKey,
+        'Authorization' => 'Bearer ' . $supabaseKey,
+    ])->delete("$supabaseUrl/storage/v1/object/$bucketName/$filePath");
+
+    if ($response->failed()) {
+        throw new \Exception('Failed to delete file from Supabase: ' . $response->body());
+    }
+}
 
 
 }

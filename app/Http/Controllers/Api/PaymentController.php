@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Payment;
+use App\Models\Program;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -16,14 +17,31 @@ class PaymentController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
+        $this->middleware('admin')->only(['handleNotification']);
     }
 
     public function create(Request $request)
     {
         $user = JWTAuth::parseToken()->authenticate();
 
+        $request->validate([
+            'phone' => 'required|string|max:15',
+            'voucher_code' => 'nullable|string|max:20',
+        ]);
+
+        if (!$user->selected_program_id) {
+            Log::error('User ' . $user->id . ' has no selected program.');
+            return response()->json(['error' => 'No program selected.'], 400);
+        }
+
+        $program = Program::find($user->selected_program_id);
+
+        if (!$program) {
+            Log::error('Program ID ' . $user->selected_program_id . ' not found.');
+            return response()->json(['error' => 'Program not found.'], 404);
+        }
+
         $order_id = 'INV-' . strtoupper(Str::random(10));
-        $amount = $request->amount;
 
         // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
@@ -34,21 +52,25 @@ class PaymentController extends Controller
         $transaction = [
             'transaction_details' => [
                 'order_id' => $order_id,
-                'gross_amount' => $amount,
+                'gross_amount' => $program->price,
             ],
             'customer_details' => [
                 'first_name' => $user->name,
                 'email' => $user->email,
-            ]
+                'phone' => $request->phone,
+            ],
         ];
 
         try {
             $response = Snap::createTransaction($transaction);
 
-            $payment = Payment::create([
+            Payment::create([
                 'user_id' => $user->id,
+                'program_id' => $program->id,
                 'order_id' => $order_id,
-                'amount' => $amount,
+                'amount' => $program->price,
+                'phone' => $request->phone,
+                'voucher_code' => $request->voucher_code,
                 'status' => 'pending',
                 'response' => [
                     'snap_token' => $response->token,
@@ -90,3 +112,4 @@ class PaymentController extends Controller
         return response()->json(['message' => 'Payment status updated']);
     }
 }
+

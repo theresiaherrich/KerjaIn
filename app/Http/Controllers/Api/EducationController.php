@@ -11,11 +11,14 @@ use Illuminate\Support\Facades\Storage;
 
 class EducationController extends Controller
 {
-    /**
-     * index
-     *
-     * @return void
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('admin')->only(['store', 'update', 'destroy', 'index']);
+    }
+
+
     public function index()
     {
 
@@ -24,12 +27,7 @@ class EducationController extends Controller
         return new EducationResource( 'List Data Education', $Education);
     }
 
-    /**
-     * store
-     *
-     * @param  mixed $request
-     * @return void
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
