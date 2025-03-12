@@ -33,7 +33,10 @@ class AuthController extends Controller
             'username' => $request->username,
         ]);
 
-        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+        Profile::firstOrCreate([
+            'user_id' => $user->id,
+            'username' => $user->username,
+        ]);
 
         return response()->json(['message' => 'Registrasi berhasil, silakan login'], 201);
     }
@@ -47,7 +50,11 @@ class AuthController extends Controller
         }
 
         $user = auth('api')->user();
-        Profile::firstOrCreate(['user_id' => $user->id]);
+
+        Profile::firstOrCreate([
+            'user_id' => $user->id,
+            'username' => $user->username,
+        ]);
 
         return $this->respondWithToken($token);
     }

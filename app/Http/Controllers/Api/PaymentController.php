@@ -17,7 +17,6 @@ class PaymentController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->middleware('admin')->only(['handleNotification']);
     }
 
     public function create(Request $request)
