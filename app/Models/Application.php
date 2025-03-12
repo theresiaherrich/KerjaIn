@@ -9,16 +9,21 @@ class Application extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['jobs_id', 'name',
-     'email', 'phone', 'date_of_birth',
-      'disability_id', 'cv', 'cover_letter'];
+    protected $fillable = ['user_id', 'jobs_id', 'name',
+    'email', 'phone', 'date_of_birth','gender', 'disability_id', 'cv', 'cover_letter'];
+
 
     public function jobsIn()
     {
-        return $this->belongsTo(jobsIn::class);
+        return $this->belongsTo(jobsIn::class, 'jobs_id');
     }
     public function disability()
     {
         return $this->belongsTo(Disability::class);
     }
+
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
 }

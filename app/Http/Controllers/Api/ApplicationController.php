@@ -10,6 +10,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ApplicationResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ApplicationSubmitted;
 
 class ApplicationController extends Controller
 {
@@ -17,7 +19,7 @@ class ApplicationController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->middleware('admin')->only(['index','show']);
+        $this->middleware('admin')->only(['index']);
     }
 
     public function index()
@@ -31,12 +33,13 @@ class ApplicationController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth('api')->user();
+
         $validator = Validator::make($request->all(), [
             'jobs_name' => 'required | exists:jobs_ins,name',
-            'name'     => 'required',
-            'email'   => 'required',
             'phone'   => 'required',
             'date_of_birth' => 'required',
+            'gender' => 'required',
             'disability_type' => 'required | exists:disabilities,type',
             'cv' => 'required|file|mimes:jpg,png,pdf|max:2048',
             'cover_letter' => 'required|file|mimes:jpg,png,pdf|max:2048',
@@ -46,21 +49,25 @@ class ApplicationController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $jobsIn = jobsIn::where('type', $request->jobs_name)->first();
+        $jobsIn = jobsIn::where('name', $request->jobs_name)->first();
         $disability = Disability::where('type', $request->disability_type)->first();
         $cvPath = $this->uploadToSupabase($request->file('cv'));
         $coverLetterPath = $this->uploadToSupabase($request->file('cover_letter'));
 
         $Application = Application::create([
+            'user_id' => $user->id,
             'jobs_id' => $jobsIn->id,
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => $user->name,
+            'email' => $user->email,
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
+            'gender' => $request->gender,
             'disability_id' => $disability->id,
             'cv' => $cvPath,
             'cover_letter' => $coverLetterPath,
         ]);
+
+        Mail::to($user->email)->send(new ApplicationSubmitted($Application));
 
         return new ApplicationResource( 'Data Application Berhasil Ditambahkan!', $Application);
     }
@@ -69,11 +76,13 @@ class ApplicationController extends Controller
     {
         $Application = Application::find($id);
 
+
         return new ApplicationResource( 'Detail Data Application!', $Application);
     }
 
     public function update(Request $request, $id)
     {
+
 
         $validator = Validator::make($request->all(), [
            'jobs_name' => 'required | exists:jobs_ins,name',
@@ -81,6 +90,7 @@ class ApplicationController extends Controller
             'email'   => 'required',
             'phone'   => 'required',
             'date_of_birth' => 'required',
+            'gender' => 'required',
             'disability_type' => 'required | exists:disabilities,type',
             'cv' => 'required|file|mimes:jpg,png,pdf|max:2048',
             'cover_letter' => 'required|file|mimes:jpg,png,pdf|max:2048',
@@ -109,6 +119,7 @@ class ApplicationController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
+            'gender' => $request->gender,
             'disability_id' => $disability->id,
         ]);
 
@@ -122,8 +133,6 @@ class ApplicationController extends Controller
 
         $this->deleteFromSupabase($Application->cv);
         $this->deleteFromSupabase($Application->cover_letter);
-
-
 
         $Application->delete();
 
@@ -157,10 +166,10 @@ class ApplicationController extends Controller
     }
 
     return "$supabaseUrl/storage/v1/object/public/$bucketName/$filePath";
-}
+    }
 
-private function deleteFromSupabase($fileUrl)
-{
+    private function deleteFromSupabase($fileUrl)
+    {
     $supabaseUrl = env('SUPABASE_URL');
     $supabaseKey = env('SUPABASE_KEY');
     $bucketName = env('SUPABASE_BUCKET', 'files');
@@ -169,7 +178,6 @@ private function deleteFromSupabase($fileUrl)
         throw new \Exception('Supabase URL atau Key tidak ditemukan di .env');
     }
 
-    // Ambil path file dari URL Supabase
     $filePath = str_replace("$supabaseUrl/storage/v1/object/public/$bucketName/", '', $fileUrl);
 
     $response = Http::withHeaders([
@@ -179,8 +187,25 @@ private function deleteFromSupabase($fileUrl)
 
     if ($response->failed()) {
         throw new \Exception('Failed to delete file from Supabase: ' . $response->body());
+         }
     }
+
+    public function userApplications()
+{
+    $user = auth('api')->user();
+
+    $applications = Application::where('user_id', $user->id)
+        ->with('jobsIn')
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'message' => 'Riwayat Lamaran',
+        'data' => $applications
+    ]);
 }
+
+
 
 
 }

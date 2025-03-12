@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('jobs_id')->constrained('jobs_ins')->onDelete('cascade');
             $table->string('name');
             $table->string('email');
             $table->string('phone');
             $table->date('date_of_birth');
+            $table->enum('gender',['Laki-laki', 'Perempuan'])->nullable();
             $table->foreignId('disability_id')->nullable()->constrained('disabilities')->onDelete('set null');
             $table->string('cv')->nullable();
             $table->text('cover_letter')->nullable();

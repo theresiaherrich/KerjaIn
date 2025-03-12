@@ -13,6 +13,8 @@ class jobsIn extends Model
     protected $fillable = ['name', 'description', 'salary', 'location',
     'company_id', 'disability_id', 'education_id', 'experience_id', 'type_id', 'policy_id'];
 
+    protected $table = 'jobs_ins'; 
+
     public function toSearchableArray()
     {
         return [
@@ -58,5 +60,9 @@ class jobsIn extends Model
     public function policy()
     {
         return $this->belongsTo(Policy::class);
+    }
+    public function applications()
+    {
+        return $this->hasMany(Application::class, 'jobs_id');
     }
 }

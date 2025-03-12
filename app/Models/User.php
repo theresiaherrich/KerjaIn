@@ -42,13 +42,11 @@ class User extends Authenticatable implements JWTSubject
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
 
     public function getJWTIdentifier()
     {
@@ -66,8 +64,12 @@ class User extends Authenticatable implements JWTSubject
     }
 
     public function selectedProgram()
-{
+    {
     return $this->belongsTo(Program::class, 'selected_program_id');
-}
+    }
 
+    public function disability()
+    {
+        return $this->belongsTo(Disability::class);
+    }
 }
