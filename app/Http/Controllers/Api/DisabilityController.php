@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DisabilityResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class DisabilityController extends Controller
 {
@@ -20,66 +21,81 @@ class DisabilityController extends Controller
 
     public function index()
     {
+        try{
+            $Disability = Disability::latest()->paginate(5);
 
-        $Disability = Disability::latest()->paginate(5);
-
-        return new DisabilityResource( 'List Data Disability', $Disability);
+            return new DisabilityResource( 'List Data Disability', $Disability);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'type'     => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'type'     => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Disability = Disability::create([
+                'type'     => $request->type,
+            ]);
+
+            return new DisabilityResource( 'Data Disability Berhasil Ditambahkan!', $Disability);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $Disability = Disability::create([
-            'type'     => $request->type,
-        ]);
-
-        return new DisabilityResource( 'Data Disability Berhasil Ditambahkan!', $Disability);
     }
 
     public function show($id)
     {
-        $Disability = Disability::find($id);
+        try{
+            $Disability = Disability::find($id);
 
-        return new DisabilityResource( 'Detail Data Disability!', $Disability);
+            return new DisabilityResource( 'Detail Data Disability!', $Disability);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
-        $validator = Validator::make($request->all(), [
-            'type'     => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Disability = Disability::find($id);
-
-            $Disability->update([
-                'type'     => $request->type,
+        try{
+            $validator = Validator::make($request->all(), [
+                'type'     => 'required',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        return new DisabilityResource('Data Disability Berhasil Diubah!', $Disability);
+            $Disability = Disability::find($id);
+
+                $Disability->update([
+                    'type'     => $request->type,
+                ]);
+
+            return new DisabilityResource('Data Disability Berhasil Diubah!', $Disability);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Disability = Disability::find($id);
 
-        $Disability = Disability::find($id);
+            $Disability->delete();
 
-
-        $Disability->delete();
-
-        return new DisabilityResource( 'Data Disability Berhasil Dihapus!', null);
+            return new DisabilityResource( 'Data Disability Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

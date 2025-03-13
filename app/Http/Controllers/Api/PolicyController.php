@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PolicyResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-
+use Exception;
 class PolicyController extends Controller
 {
 
@@ -20,65 +20,81 @@ class PolicyController extends Controller
 
     public function index()
     {
+        try{
+            $Policy = Policy::latest()->paginate(5);
 
-        $Policy = Policy::latest()->paginate(5);
-
-        return new PolicyResource('List Data Policy', $Policy);
+            return new PolicyResource('List Data Policy', $Policy);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'location'     => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'location'     => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Policy = Policy::create([
+                'location'     => $request->location,
+            ]);
+
+            return new PolicyResource( 'Data Policy Berhasil Ditambahkan!', $Policy);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $Policy = Policy::create([
-            'location'     => $request->location,
-        ]);
-
-        return new PolicyResource( 'Data Policy Berhasil Ditambahkan!', $Policy);
     }
 
     public function show($id)
     {
-        $Policy = Policy::find($id);
+        try{
+            $Policy = Policy::find($id);
 
-        return new PolicyResource('Detail Data Policy!', $Policy);
+            return new PolicyResource('Detail Data Policy!', $Policy);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
-        $validator = Validator::make($request->all(), [
-            'location'     => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Policy = Policy::find($id);
-
-            $Policy->update([
-                'location'     => $request->location,
+        try{
+            $validator = Validator::make($request->all(), [
+                'location'     => 'required',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        return new PolicyResource('Data Policy Berhasil Diubah!', $Policy);
+            $Policy = Policy::find($id);
+
+                $Policy->update([
+                    'location'     => $request->location,
+                ]);
+
+            return new PolicyResource('Data Policy Berhasil Diubah!', $Policy);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Policy = Policy::find($id);
 
-        $Policy = Policy::find($id);
+            $Policy->delete();
 
-        $Policy->delete();
-
-        return new PolicyResource('Data Policy Berhasil Dihapus!', null);
+            return new PolicyResource('Data Policy Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

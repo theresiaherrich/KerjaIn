@@ -8,10 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TypeResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-
+use Exception;
 class TypeController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -20,65 +19,80 @@ class TypeController extends Controller
 
     public function index()
     {
+        try{
+            $Type = Type::latest()->paginate(5);
 
-        $Type = Type::latest()->paginate(5);
-
-        return new TypeResource('List Data Type', $Type);
+            return new TypeResource('List Data Type', $Type);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
-
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'duration'     => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'duration'     => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Type = Type::create([
+                'duration'     => $request->duration,
+            ]);
+
+            return new TypeResource( 'Data Type Berhasil Ditambahkan!', $Type);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $Type = Type::create([
-            'duration'     => $request->duration,
-        ]);
-
-        return new TypeResource( 'Data Type Berhasil Ditambahkan!', $Type);
     }
 
     public function show($id)
     {
-        $Type = Type::find($id);
+        try{
+            $Type = Type::find($id);
 
-        return new TypeResource( 'Detail Data Type!', $Type);
+            return new TypeResource( 'Detail Data Type!', $Type);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
-        $validator = Validator::make($request->all(), [
-            'duration'     => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Type = Type::find($id);
-
-            $Type->update([
-                'duration'     => $request->duration,
+        try{
+            $validator = Validator::make($request->all(), [
+                'duration'     => 'required',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        return new TypeResource( 'Data Type Berhasil Diubah!', $Type);
+            $Type = Type::find($id);
+
+                $Type->update([
+                    'duration'     => $request->duration,
+                ]);
+
+            return new TypeResource( 'Data Type Berhasil Diubah!', $Type);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Type = Type::find($id);
 
-        $Type = Type::find($id);
+            $Type->delete();
 
-        $Type->delete();
-
-        return new TypeResource( 'Data Type Berhasil Dihapus!', null);
+            return new TypeResource( 'Data Type Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

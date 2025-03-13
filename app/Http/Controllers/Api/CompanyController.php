@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CompanyResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use Exception;
 
 class CompanyController extends Controller
 {
@@ -20,48 +21,59 @@ class CompanyController extends Controller
 
     public function index()
     {
+        try{
+            $Company = Company::latest()->paginate(5);
 
-        $Company = Company::latest()->paginate(5);
-
-        return new CompanyResource('List Data Company', $Company);
+            return new CompanyResource('List Data Company', $Company);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'logo'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'name'     => 'required',
-            'location'     => 'required',
-            'description'   => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'logo'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'name'     => 'required',
+                'location'     => 'required',
+                'description'   => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $imagePath = $this->uploadToSupabase($request->file('logo'));
+
+
+            $Company = Company::create([
+                'logo'     => $imagePath,
+                'name'     => $request->name,
+                'location'     => $request->location,
+                'description'   => $request->description,
+            ]);
+
+            return new CompanyResource( 'Data Company Berhasil Ditambahkan!', $Company);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $imagePath = $this->uploadToSupabase($request->file('logo'));
-
-
-        $Company = Company::create([
-            'logo'     => $imagePath,
-            'name'     => $request->name,
-            'location'     => $request->location,
-            'description'   => $request->description,
-        ]);
-
-        return new CompanyResource( 'Data Company Berhasil Ditambahkan!', $Company);
     }
 
     public function show($id)
     {
-        $Company = Company::find($id);
+        try{
+            $Company = Company::find($id);
 
-        return new CompanyResource( 'Detail Data Company!', $Company);
+            return new CompanyResource( 'Detail Data Company!', $Company);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
+        try{
         $validator = Validator::make($request->all(), [
             'name'     => 'required',
             'location'     => 'required',
@@ -95,18 +107,24 @@ class CompanyController extends Controller
         }
 
         return new CompanyResource( 'Data Company Berhasil Diubah!', $Company);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Company = Company::find($id);
 
-        $Company = Company::find($id);
+            $this->deleteFromSupabase($Company->logo);
 
-        $this->deleteFromSupabase($Company->logo);
+            $Company->delete();
 
-        $Company->delete();
-
-        return new CompanyResource(true, 'Data Company Berhasil Dihapus!', null);
+            return new CompanyResource(true, 'Data Company Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     private function uploadToSupabase($file)
@@ -148,7 +166,6 @@ class CompanyController extends Controller
         throw new \Exception('Supabase URL atau Key tidak ditemukan di .env');
     }
 
-    // Ambil path file dari URL Supabase
     $filePath = str_replace("$supabaseUrl/storage/v1/object/public/$bucketName/", '', $fileUrl);
 
     $response = Http::withHeaders([

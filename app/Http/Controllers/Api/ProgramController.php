@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProgramResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
-
+use Exception;
 class ProgramController extends Controller
 {
 
@@ -20,57 +20,69 @@ class ProgramController extends Controller
 
     public function index(Request $request)
     {
-    $search = $request->input('search');
+        try{
+            $search = $request->input('search');
 
-    $programs = Program::search($search)
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+            $programs = Program::search($search)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-    return response()->json([
-        'message' => 'List Data Program',
-        'data' => $programs
-    ]);
+            return response()->json([
+                'message' => 'List Data Program',
+                'data' => $programs
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'name'     => 'required',
-            'date'   => 'required',
-            'price'   => 'required',
-            'description'   => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'name'     => 'required',
+                'date'   => 'required',
+                'price'   => 'required',
+                'description'   => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $imagePath = $this->uploadToSupabase($request->file('image'));
+
+
+            $Program = Program::create([
+                'image'     => $imagePath,
+                'name'     => $request->name,
+                'date'   => $request->date,
+                'price'   => $request->price,
+                'description'   => $request->description,
+            ]);
+
+            return new ProgramResource( 'Data Program Berhasil Ditambahkan!', $Program);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $imagePath = $this->uploadToSupabase($request->file('image'));
-
-
-        $Program = Program::create([
-            'image'     => $imagePath,
-            'name'     => $request->name,
-            'date'   => $request->date,
-            'price'   => $request->price,
-            'description'   => $request->description,
-        ]);
-
-        return new ProgramResource( 'Data Program Berhasil Ditambahkan!', $Program);
     }
 
     public function show($id)
     {
-        $Program = Program::find($id);
+        try{
+            $Program = Program::find($id);
 
-        return new ProgramResource( 'Detail Data Program!', $Program);
+            return new ProgramResource( 'Detail Data Program!', $Program);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
+        try{
         $validator = Validator::make($request->all(), [
             'name'     => 'required',
             'date'   => 'required',
@@ -108,18 +120,24 @@ class ProgramController extends Controller
         }
 
         return new ProgramResource( 'Data Program Berhasil Diubah!', $Program);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
     public function destroy($id)
     {
+        try{
+            $Program = Program::find($id);
 
-        $Program = Program::find($id);
+            $this->deleteFromSupabase($Program->image);
 
-        $this->deleteFromSupabase($Program->image);
+            $Program->delete();
 
-        $Program->delete();
-
-        return new ProgramResource( 'Data Program Berhasil Dihapus!', null);
+            return new ProgramResource( 'Data Program Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     private function uploadToSupabase($file)
@@ -161,7 +179,6 @@ class ProgramController extends Controller
         throw new \Exception('Supabase URL atau Key tidak ditemukan di .env');
     }
 
-    // Ambil path file dari URL Supabase
     $filePath = str_replace("$supabaseUrl/storage/v1/object/public/$bucketName/", '', $fileUrl);
 
     $response = Http::withHeaders([

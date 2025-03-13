@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ApplicationSubmitted;
+use Exception;
 
 class ApplicationController extends Controller
 {
@@ -24,15 +25,19 @@ class ApplicationController extends Controller
 
     public function index()
     {
+        try{
+            $Application = Application::latest()->paginate(5);
 
-        $Application = Application::latest()->paginate(5);
-
-        return new ApplicationResource( 'List Data Application', $Application);
+            return new ApplicationResource( 'List Data Application', $Application);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     public function store(Request $request)
     {
+        try {
         $user = auth('api')->user();
 
         $validator = Validator::make($request->all(), [
@@ -70,19 +75,25 @@ class ApplicationController extends Controller
         Mail::to($user->email)->send(new ApplicationSubmitted($Application));
 
         return new ApplicationResource( 'Data Application Berhasil Ditambahkan!', $Application);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
     public function show($id)
     {
-        $Application = Application::find($id);
+        try{
+            $Application = Application::find($id);
 
-
-        return new ApplicationResource( 'Detail Data Application!', $Application);
+            return new ApplicationResource( 'Detail Data Application!', $Application);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-
+        try{
 
         $validator = Validator::make($request->all(), [
            'jobs_name' => 'required | exists:jobs_ins,name',
@@ -124,11 +135,14 @@ class ApplicationController extends Controller
         ]);
 
         return new ApplicationResource( 'Data Application Berhasil Diubah!', $application);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
     public function destroy($id)
     {
-
+        try{
         $Application = Application::find($id);
 
         $this->deleteFromSupabase($Application->cv);
@@ -137,10 +151,13 @@ class ApplicationController extends Controller
         $Application->delete();
 
         return new ApplicationResource( 'Data Application Berhasil Dihapus!', null);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
     private function uploadToSupabase($file)
-{
+    {
     $supabaseUrl = env('SUPABASE_URL');
     $supabaseKey = env('SUPABASE_KEY');
     $bucketName = env('SUPABASE_BUCKET', 'files');
@@ -191,21 +208,22 @@ class ApplicationController extends Controller
     }
 
     public function userApplications()
-{
-    $user = auth('api')->user();
+    {
+        try{
+            $user = auth('api')->user();
 
-    $applications = Application::where('user_id', $user->id)
-        ->with('jobsIn')
-        ->latest()
-        ->get();
+            $applications = Application::where('user_id', $user->id)
+                ->with('jobsIn')
+                ->latest()
+                ->get();
 
-    return response()->json([
-        'message' => 'Riwayat Lamaran',
-        'data' => $applications
-    ]);
-}
+            return response()->json([
+                'message' => 'Riwayat Lamaran',
+                'data' => $applications
+            ]);
 
-
-
-
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

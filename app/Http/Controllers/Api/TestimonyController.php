@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TestimonyResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-
+use Exception;
 class TestimonyController extends Controller
 {
 
@@ -20,68 +20,84 @@ class TestimonyController extends Controller
 
     public function index()
     {
+        try{
+            $Testimony = Testimony::latest()->paginate(5);
 
-        $Testimony = Testimony::latest()->paginate(5);
-
-        return new TestimonyResource( 'List Data Testimony', $Testimony);
+            return new TestimonyResource( 'List Data Testimony', $Testimony);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        $Testimony = Testimony::create([
-            'name'     => $request->name,
-            'description'   => $request->description,
-        ]);
-
-        return new TestimonyResource('Data Testimony Berhasil Ditambahkan!', $Testimony);
-    }
-
-    public function show($id)
-    {
-        $Testimony = Testimony::find($id);
-
-        return new TestimonyResource( 'Detail Data Testimony!', $Testimony);
-    }
-
-    public function update(Request $request, $id)
-    {
-
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Testimony = Testimony::find($id);
-
-            $Testimony->update([
+            $Testimony = Testimony::create([
                 'name'     => $request->name,
                 'description'   => $request->description,
             ]);
 
+            return new TestimonyResource('Data Testimony Berhasil Ditambahkan!', $Testimony);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 
-        return new TestimonyResource( 'Data Testimony Berhasil Diubah!', $Testimony);
+    public function show($id)
+    {
+        try{
+            $Testimony = Testimony::find($id);
+
+            return new TestimonyResource( 'Detail Data Testimony!', $Testimony);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Testimony = Testimony::find($id);
+
+                $Testimony->update([
+                    'name'     => $request->name,
+                    'description'   => $request->description,
+                ]);
+
+            return new TestimonyResource( 'Data Testimony Berhasil Diubah!', $Testimony);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Testimony = Testimony::find($id);
 
-        $Testimony = Testimony::find($id);
+            $Testimony->delete();
 
-        $Testimony->delete();
-
-        return new TestimonyResource('Data Testimony Berhasil Dihapus!', null);
+            return new TestimonyResource('Data Testimony Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

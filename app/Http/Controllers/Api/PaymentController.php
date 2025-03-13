@@ -12,6 +12,7 @@ use Midtrans\Snap;
 use Midtrans\Notification;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class PaymentController extends Controller
 {
@@ -22,54 +23,66 @@ class PaymentController extends Controller
 
     }
 
-
     public function index()
     {
-        $user = JWTAuth::parseToken()->authenticate();
-        $payments = Payment::orderBy('created_at', 'desc')->get();
-        return response()->json(['payments' => $payments]);
+        try{
+            $user = JWTAuth::parseToken()->authenticate();
+            $payments = Payment::orderBy('created_at', 'desc')->get();
+            return response()->json(['payments' => $payments]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try{
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $payment = Payment::find($id);
+            $payment = Payment::find($id);
 
-        if (!$payment) {
-            return response()->json(['error' => 'Payment not found.'], 404);
+            if (!$payment) {
+                return response()->json(['error' => 'Payment not found.'], 404);
+            }
+
+            $request->validate([
+                'status' => 'required|string',
+                'payment_type' => 'nullable|string'
+            ]);
+
+            $payment->update([
+                'status' => $request->status,
+                'payment_type' => $request->payment_type ?? $payment->payment_type,
+            ]);
+
+            return response()->json(['message' => 'Payment updated successfully', 'payment' => $payment]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $request->validate([
-            'status' => 'required|string',
-            'payment_type' => 'nullable|string'
-        ]);
-
-        $payment->update([
-            'status' => $request->status,
-            'payment_type' => $request->payment_type ?? $payment->payment_type,
-        ]);
-
-        return response()->json(['message' => 'Payment updated successfully', 'payment' => $payment]);
     }
 
     public function destroy($id)
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try{
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $payment = Payment::find($id);
+            $payment = Payment::find($id);
 
-        if (!$payment) {
-            return response()->json(['error' => 'Payment not found.'], 404);
+            if (!$payment) {
+                return response()->json(['error' => 'Payment not found.'], 404);
+            }
+
+            $payment->delete();
+
+            return response()->json(['message' => 'Payment deleted successfully']);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $payment->delete();
-
-        return response()->json(['message' => 'Payment deleted successfully']);
     }
 
     public function create(Request $request)
     {
+        try{
         $user = JWTAuth::parseToken()->authenticate();
 
         $request->validate([
@@ -134,45 +147,75 @@ class PaymentController extends Controller
             Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Payment creation failed.'], 500);
         }
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
     public function notification(Request $request)
     {
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
 
-        $notification = new Notification();
+    Config::$serverKey = config('midtrans.server_key');
+    Config::$isProduction = false;
+    Config::$isSanitized = true;
+    Config::$is3ds = true;
+
+    try {
+
+        $notification = new \Midtrans\Notification();
+
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
+        $paymentType = $notification->payment_type;
 
         $payment = Payment::where('order_id', $orderId)->first();
-
         if (!$payment) {
             Log::error("Payment with order_id $orderId not found.");
             return response()->json(['error' => 'Payment not found.'], 404);
         }
 
+        $statusMapping = [
+            'settlement' => 'paid',
+            'capture' => 'paid',
+            'pending' => 'pending',
+            'deny' => 'failed',
+            'cancel' => 'canceled',
+            'expire' => 'expired',
+            'refund' => 'refunded'
+        ];
+        $newStatus = $statusMapping[$transactionStatus] ?? 'unknown';
+
         $payment->update([
-            'status' => $transactionStatus,
-            'payment_type' => $notification->payment_type,
-            'response' => $notification
+            'status' => $newStatus,
+            'payment_type' => $paymentType,
+            'response' => json_encode($request->all())
         ]);
 
-        Log::info("Payment updated successfully for order_id $orderId with status $transactionStatus.");
-        return response()->json(['message' => 'Payment status updated.']);
+        Log::info("Payment updated successfully for order_id $orderId with status $newStatus.");
+        return response()->json([
+            'message' => 'Payment status updated.',
+            'status' => $newStatus
+        ]);
+    } catch (\Exception $e) {
+        Log::error("Midtrans Notification Error: " . $e->getMessage());
+        return response()->json(['error' => 'Failed to process notification.'], 500);
     }
+    }
+
 
     public function history()
     {
-        $user = JWTAuth::parseToken()->authenticate();
+        try{
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $payments = Payment::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+            $payments = Payment::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        return response()->json([ 'payments' => $payments ]);
+            return response()->json([ 'payments' => $payments ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 }

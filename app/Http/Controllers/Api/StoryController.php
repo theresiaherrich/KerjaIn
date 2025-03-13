@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\StoryResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-
+use Exception;
 class StoryController extends Controller
 {
 
@@ -20,68 +20,84 @@ class StoryController extends Controller
 
     public function index()
     {
+        try{
+            $Story = Story::latest()->paginate(5);
 
-        $Story = Story::latest()->paginate(5);
-
-        return new StoryResource( 'List Data Story', $Story);
+            return new StoryResource( 'List Data Story', $Story);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        $Story = Story::create([
-            'name'     => $request->name,
-            'description'   => $request->description,
-        ]);
-
-        return new StoryResource( 'Data Story Berhasil Ditambahkan!', $Story);
-    }
-
-    public function show($id)
-    {
-        $Story = Story::find($id);
-
-        return new StoryResource('Detail Data Story!', $Story);
-    }
-
-    public function update(Request $request, $id)
-    {
-
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Story = Story::find($id);
-
-            $Story->update([
+            $Story = Story::create([
                 'name'     => $request->name,
                 'description'   => $request->description,
             ]);
 
+            return new StoryResource( 'Data Story Berhasil Ditambahkan!', $Story);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 
-        return new StoryResource( 'Data Story Berhasil Diubah!', $Story);
+    public function show($id)
+    {
+        try{
+            $Story = Story::find($id);
+
+            return new StoryResource('Detail Data Story!', $Story);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Story = Story::find($id);
+
+                $Story->update([
+                    'name'     => $request->name,
+                    'description'   => $request->description,
+                ]);
+
+            return new StoryResource( 'Data Story Berhasil Diubah!', $Story);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Story = Story::find($id);
 
-        $Story = Story::find($id);
+            $Story->delete();
 
-        $Story->delete();
-
-        return new StoryResource('Data Story Berhasil Dihapus!', null);
+            return new StoryResource('Data Story Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

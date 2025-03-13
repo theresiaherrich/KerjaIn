@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CommunityResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-
+use Exception;
 class CommunityController extends Controller
 {
 
@@ -20,69 +20,86 @@ class CommunityController extends Controller
 
     public function index()
     {
+        try{
+            $Community = Community::latest()->paginate(5);
 
-        $Community = Community::latest()->paginate(5);
-
-        return new CommunityResource( 'List Data Community', $Community);
+            return new CommunityResource( 'List Data Community', $Community);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
 
-        $Community = Community::create([
-            'name'     => $request->name,
-            'description'   => $request->description,
-        ]);
-
-        return new CommunityResource( 'Data Community Berhasil Ditambahkan!', $Community);
-    }
-
-    public function show($id)
-    {
-        $Community = Community::find($id);
-
-        return new CommunityResource( 'Detail Data Community!', $Community);
-    }
-
-    public function update(Request $request, $id)
-    {
-
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required',
-            'description'   => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $Community = Community::find($id);
-
-            $Community->update([
+            $Community = Community::create([
                 'name'     => $request->name,
                 'description'   => $request->description,
             ]);
 
+            return new CommunityResource( 'Data Community Berhasil Ditambahkan!', $Community);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 
-        return new CommunityResource( 'Data Community Berhasil Diubah!', $Community);
+    public function show($id)
+    {
+        try{
+            $Community = Community::find($id);
+
+            return new CommunityResource( 'Detail Data Community!', $Community);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'name'     => 'required',
+                'description'   => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $Community = Community::find($id);
+
+                $Community->update([
+                    'name'     => $request->name,
+                    'description'   => $request->description,
+                ]);
+
+
+            return new CommunityResource( 'Data Community Berhasil Diubah!', $Community);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try{
+            $Community = Community::find($id);
 
-        $Community = Community::find($id);
+            $Community->delete();
 
-        $Community->delete();
-
-        return new CommunityResource( 'Data Community Berhasil Dihapus!', null);
+            return new CommunityResource( 'Data Community Berhasil Dihapus!', null);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
