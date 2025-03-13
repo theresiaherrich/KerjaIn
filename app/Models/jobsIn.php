@@ -5,6 +5,8 @@ namespace App\Models;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+
 
 class jobsIn extends Model
 {
@@ -64,5 +66,10 @@ class jobsIn extends Model
     public function applications()
     {
         return $this->hasMany(Application::class, 'jobs_id');
+    }
+
+    public function favorites(): MorphMany
+    {
+        return $this->morphMany(Favorite::class, 'favoritable');
     }
 }

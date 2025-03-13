@@ -9,6 +9,7 @@ use App\Models\Program;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Notification;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,55 @@ class PaymentController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth:api', ['except' => ['notification']]);
+        $this->middleware('admin')->only(['index', 'update', 'destroy']);
+
+    }
+
+
+    public function index()
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $payments = Payment::orderBy('created_at', 'desc')->get();
+        return response()->json(['payments' => $payments]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+
+        $payment = Payment::find($id);
+
+        if (!$payment) {
+            return response()->json(['error' => 'Payment not found.'], 404);
+        }
+
+        $request->validate([
+            'status' => 'required|string',
+            'payment_type' => 'nullable|string'
+        ]);
+
+        $payment->update([
+            'status' => $request->status,
+            'payment_type' => $request->payment_type ?? $payment->payment_type,
+        ]);
+
+        return response()->json(['message' => 'Payment updated successfully', 'payment' => $payment]);
+    }
+
+    public function destroy($id)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+
+        $payment = Payment::find($id);
+
+        if (!$payment) {
+            return response()->json(['error' => 'Payment not found.'], 404);
+        }
+
+        $payment->delete();
+
+        return response()->json(['message' => 'Payment deleted successfully']);
     }
 
     public function create(Request $request)
@@ -42,7 +91,6 @@ class PaymentController extends Controller
 
         $order_id = 'INV-' . strtoupper(Str::random(10));
 
-        // Konfigurasi Midtrans
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = false;
         Config::$isSanitized = true;
@@ -88,27 +136,32 @@ class PaymentController extends Controller
         }
     }
 
-    public function handleNotification(Request $request)
+    public function notification(Request $request)
     {
-        $notif = $request->all();
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
 
-        if (!isset($notif['order_id'])) {
-            return response()->json(['message' => 'Invalid notification: order_id missing'], 400);
-        }
+        $notification = new Notification();
+        $transactionStatus = $notification->transaction_status;
+        $orderId = $notification->order_id;
 
-        $payment = Payment::where('order_id', $notif['order_id'])->first();
+        $payment = Payment::where('order_id', $orderId)->first();
 
         if (!$payment) {
-            return response()->json(['message' => 'Payment not found'], 404);
+            Log::error("Payment with order_id $orderId not found.");
+            return response()->json(['error' => 'Payment not found.'], 404);
         }
 
         $payment->update([
-            'status' => $notif['transaction_status'] ?? 'unknown',
-            'payment_type' => $notif['payment_type'] ?? 'unknown',
-            'response' => $notif,
+            'status' => $transactionStatus,
+            'payment_type' => $notification->payment_type,
+            'response' => $notification
         ]);
 
-        return response()->json(['message' => 'Payment status updated']);
+        Log::info("Payment updated successfully for order_id $orderId with status $transactionStatus.");
+        return response()->json(['message' => 'Payment status updated.']);
     }
 
     public function history()

@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ApplicationController;
-
+use App\Http\Controllers\Api\FavoriteController;
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -37,13 +37,21 @@ Route::apiResource('/stories',App\Http\Controllers\Api\StoryController::class);
 Route::apiResource('/testimonies',App\Http\Controllers\Api\TestimonyController::class);
 Route::apiResource('/types',App\Http\Controllers\Api\TypeController::class);
 
+Route::middleware('auth:api')->group(function () {
+    Route::post('/favorites/toggle', [FavoriteController::class, 'toggleFavorite']);
+    Route::get('/favorites', [FavoriteController::class, 'getFavorites']);
+});
+
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/payments', [PaymentController::class, 'create']);
+    Route::get('/payments', [PaymentController::class, 'index']);
+    Route::put('/payments/{id}', [PaymentController::class, 'update']);
+    Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
 });
 Route::middleware('auth:api')->get('/historyPayments', [PaymentController::class, 'history']);
 
-Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
+Route::post('/midtrans/notification', [PaymentController::class, 'notification']);
 
 
 

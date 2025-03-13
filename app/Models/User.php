@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Models\Profile;
+use App\Models\Favorite;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -71,5 +74,10 @@ class User extends Authenticatable implements JWTSubject
     public function disability()
     {
         return $this->belongsTo(Disability::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
     }
 }
