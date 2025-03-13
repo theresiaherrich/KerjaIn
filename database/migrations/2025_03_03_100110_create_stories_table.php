@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('stories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('description');
+            $table->longText('description');
             $table->timestamps();
         });
     }

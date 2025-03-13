@@ -18,13 +18,20 @@ class ProgramController extends Controller
         $this->middleware('admin')->only(['store', 'update', 'destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+    $search = $request->input('search');
 
-        $Program = Program::latest()->paginate(5);
+    $programs = Program::search($search)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
 
-        return new ProgramResource( 'List Data Program', $Program);
+    return response()->json([
+        'message' => 'List Data Program',
+        'data' => $programs
+    ]);
     }
+
 
     public function store(Request $request)
     {
@@ -33,6 +40,7 @@ class ProgramController extends Controller
             'name'     => 'required',
             'date'   => 'required',
             'price'   => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +55,7 @@ class ProgramController extends Controller
             'name'     => $request->name,
             'date'   => $request->date,
             'price'   => $request->price,
+            'description'   => $request->description,
         ]);
 
         return new ProgramResource( 'Data Program Berhasil Ditambahkan!', $Program);
@@ -66,6 +75,7 @@ class ProgramController extends Controller
             'name'     => 'required',
             'date'   => 'required',
             'price'   => 'required',
+            'description'   => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -84,6 +94,7 @@ class ProgramController extends Controller
                 'name'     => $request->name,
                 'date'   => $request->date,
                 'price'   => $request->price,
+                'description'   => $request->description,
             ]);
 
         } else {
@@ -92,6 +103,7 @@ class ProgramController extends Controller
                'name'     => $request->name,
                 'date'   => $request->date,
                 'price'   => $request->price,
+                'description'   => $request->description,
             ]);
         }
 
