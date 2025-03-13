@@ -61,7 +61,7 @@ class ProfileController extends Controller
         }
     }
 
-    public function update(Request $request)
+    public function store(Request $request)
     {
         try {
             $user = auth('api')->user();
