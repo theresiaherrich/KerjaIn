@@ -17,12 +17,12 @@ return new class extends Migration
             $table->text('description');
             $table->double('salary');
             $table->string('location');
-            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            $table->foreignId('disability_id')->nullable()->constrained('disabilities')->onDelete('set null');
-            $table->foreignId('education_id')->nullable()->constrained('educations')->onDelete('set null');
-            $table->foreignId('experience_id')->nullable()->constrained('experiences')->onDelete('set null');
-            $table->foreignId('type_id')->nullable()->constrained('types')->onDelete('set null');
-            $table->foreignId('policy_id')->nullable()->constrained('policies')->onDelete('set null');
+            $table->foreignId('company_name')->constrained('companies')->onDelete('cascade');
+            $table->foreignId('disability_type')->nullable()->constrained('disabilities')->onDelete('set null');
+            $table->foreignId('education_level')->nullable()->constrained('educations')->onDelete('set null');
+            $table->foreignId('experience_duration')->nullable()->constrained('experiences')->onDelete('set null');
+            $table->foreignId('type_duration')->nullable()->constrained('types')->onDelete('set null');
+            $table->foreignId('policy_location')->nullable()->constrained('policies')->onDelete('set null');
             $table->timestamps();
 
         });

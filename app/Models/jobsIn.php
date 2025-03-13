@@ -11,9 +11,9 @@ class jobsIn extends Model
     use HasFactory,  Searchable;
 
     protected $fillable = ['name', 'description', 'salary', 'location',
-    'company_id', 'disability_id', 'education_id', 'experience_id', 'type_id', 'policy_id'];
+    'company_name', 'disability_type', 'education_level', 'experience_duration', 'type_duration', 'policy_location'];
 
-    protected $table = 'jobs_ins'; 
+    protected $table = 'jobs_ins';
 
     public function toSearchableArray()
     {

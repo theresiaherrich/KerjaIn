@@ -24,46 +24,49 @@ class JobsInController extends Controller
     }
 
     public function index(Request $request)
-    {
-
-        if ($request->has('search') && !empty($request->search)) {
-            $jobsIn = jobsIn::search($request->search);
-        } else {
-            $jobsIn = jobsIn::query();
-        }
-
-        if ($request->has('locations') && !empty($request->locations)) {
-            $jobsIn = $jobsIn->whereIn('location', $request->locations);
-        }
-        if ($request->has('min_salary') && !empty($request->min_salary)) {
-            $jobsIn = $jobsIn->where('salary', '>=', $request->min_salary);
-        }
-        if ($request->has('max_salary') && !empty($request->max_salary)) {
-            $jobsIn = $jobsIn->where('salary', '<=', $request->max_salary);
-        }
-        if ($request->has('company_ids') && !empty($request->company_ids)) {
-            $jobsIn = $jobsIn->whereIn('company_id', $request->company_ids);
-        }
-        if ($request->has('disability_ids') && !empty($request->disability_ids)) {
-            $jobsIn = $jobsIn->whereIn('disability_id', $request->disability_ids);
-        }
-        if ($request->has('education_ids') && !empty($request->education_ids)) {
-            $jobsIn = $jobsIn->whereIn('education_id', $request->education_ids);
-        }
-        if ($request->has('experience_ids') && !empty($request->experience_ids)) {
-            $jobsIn = $jobsIn->whereIn('experience_id', $request->experience_ids);
-        }
-        if ($request->has('type_ids') && !empty($request->type_ids)) {
-            $jobsIn = $jobsIn->whereIn('type_id', $request->type_ids);
-        }
-        if ($request->has('policy_ids') && !empty($request->policy_ids)) {
-            $jobsIn = $jobsIn->whereIn('policy_id', $request->policy_ids);
-        }
-
-        $jobsIn = $jobsIn->with(['company','disability','education', 'experience','type','policy',])->latest()->paginate(5);
-
-        return new jobsInResource('List Data jobsIn', $jobsIn);
+{
+    if ($request->has('search') && !empty($request->search)) {
+        $jobIds = jobsIn::search($request->search)->keys();
+        $jobsIn = jobsIn::whereIn('id', $jobIds);
+    } else {
+        $jobsIn = jobsIn::query();
     }
+
+    if ($request->has('locations') && !empty($request->locations)) {
+        $jobsIn = $jobsIn->whereIn('location', $request->locations);
+    }
+    if ($request->has('min_salary') && !empty($request->min_salary)) {
+        $jobsIn = $jobsIn->where('salary', '>=', $request->min_salary);
+    }
+    if ($request->has('max_salary') && !empty($request->max_salary)) {
+        $jobsIn = $jobsIn->where('salary', '<=', $request->max_salary);
+    }
+    if ($request->has('company_names') && !empty($request->company_names)) {
+        $jobsIn = $jobsIn->whereIn('company_name', $request->company_names);
+    }
+    if ($request->has('disability_types') && !empty($request->disability_types)) {
+        $jobsIn = $jobsIn->whereIn('disability_type', $request->disability_types);
+    }
+    if ($request->has('education_levels') && !empty($request->education_levels)) {
+        $jobsIn = $jobsIn->whereIn('education_level', $request->education_levels);
+    }
+    if ($request->has('experience_durations') && !empty($request->experience_durations)) {
+        $jobsIn = $jobsIn->whereIn('experience_id', $request->experience_durations);
+    }
+    if ($request->has('type_durations') && !empty($request->type_durations)) {
+        $jobsIn = $jobsIn->whereIn('type_duration', $request->type_durations);
+    }
+    if ($request->has('policy_locations') && !empty($request->policy_locations)) {
+        $jobsIn = $jobsIn->whereIn('policy_location', $request->policy_locations);
+    }
+
+    $jobsIn = $jobsIn->with(['company','disability','education', 'experience','type','policy'])
+                     ->latest()
+                     ->paginate(5);
+
+    return new jobsInResource('List Data jobsIn', $jobsIn);
+}
+
 
 
     public function store(Request $request)
@@ -97,13 +100,14 @@ class JobsInController extends Controller
             'description'   => $request->description,
             'salary'        => $request->salary,
             'location'      => $request->location,
-            'company_id'    => $company->id,
-            'disability_id' => $disability->id,
-            'education_id'  => $education->id,
-            'experience_id' => $experience->id,
-            'type_id'       => $type->id,
-            'policy_id'     => $policy->id,
+            'company_name'  => $company->id, 
+            'disability_type' => $disability->id,
+            'education_level'  => $education->id,
+            'experience_duration' => $experience->id,
+            'type_duration'       => $type->id,
+            'policy_location'     => $policy->id,
         ]);
+
 
         return new jobsInResource('Data jobsIn Berhasil Ditambahkan!', $jobsIn);
     }
@@ -171,12 +175,12 @@ class JobsInController extends Controller
             'description'   => $request->description,
             'salary'        => $request->salary,
             'location'      => $request->location,
-            'company_id'    => $company->id,
-            'disability_id' => $disability->id,
-            'education_id'  => $education->id,
-            'experience_id' => $experience->id,
-            'type_id'       => $type->id,
-            'policy_id'     => $policy->id,
+            'company_name'  => $company->id,
+            'disability_type' => $disability->id,
+            'education_level'  => $education->id,
+            'experience_duration' => $experience->id,
+            'type_duration'       => $type->id,
+            'policy_location'     => $policy->id,
         ]);
 
         return new jobsInResource('Data jobsIn Berhasil Diubah!', $jobsIn);
