@@ -13,6 +13,7 @@ Route::post('/refresh', [AuthController::class, 'login'])->name('refresh');
 Route::post('/select-program', [UserController::class, 'selectProgram'])->name('selectProgram');
 
 Route::middleware('auth:api')->get('/me', [AuthController::class, 'me']);
+Route::middleware('auth:api')->put('/makeAdmin/{id}', [AuthController::class, 'makeAdmin']);
 Route::middleware('auth:api')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:api')->get('/indexUser', [AuthController::class, 'index']);
 Route::middleware('auth:api')->delete('/destroy/{id}', [AuthController::class, 'destroy']);

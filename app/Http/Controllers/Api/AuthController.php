@@ -35,7 +35,6 @@ class AuthController extends Controller
 
         Profile::firstOrCreate([
             'user_id' => $user->id,
-            'username' => $user->username,
         ]);
 
         return response()->json(['message' => 'Registrasi berhasil, silakan login'], 201);
@@ -53,7 +52,7 @@ class AuthController extends Controller
 
         Profile::firstOrCreate([
             'user_id' => $user->id,
-            'username' => $user->username,
+
         ]);
 
         return $this->respondWithToken($token);
@@ -105,4 +104,19 @@ class AuthController extends Controller
         $user->delete();
         return response()->json(['message' => 'User berhasil dihapus']);
     }
+
+    public function makeAdmin($id)
+{
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User tidak ditemukan'], 404);
+    }
+
+    $user->role = 'admin';
+    $user->save();
+
+    return response()->json(['message' => 'User berhasil dijadikan admin']);
+}
+
 }
