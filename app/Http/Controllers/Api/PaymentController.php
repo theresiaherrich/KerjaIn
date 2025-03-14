@@ -153,61 +153,72 @@ class PaymentController extends Controller
     }
 
     public function notification(Request $request)
-    {
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
+{
+    Config::$serverKey = config('midtrans.server_key');
+    Config::$isProduction = false;
+    Config::$isSanitized = true;
+    Config::$is3ds = true;
 
-        try {
-            $notification = new \Midtrans\Notification();
-            $transactionStatus = $notification->transaction_status;
-            $orderId = $notification->order_id;
-            $paymentType = $notification->payment_type;
+    try {
+        $notification = new \Midtrans\Notification();
+        $transactionStatus = $notification->transaction_status;
+        $orderId = $notification->order_id;
+        $paymentType = $notification->payment_type;
+        $transactionTime = $notification->transaction_time;
+        $settlementTime = $notification->settlement_time ?? null;
+        $grossAmount = $notification->gross_amount;
 
-            $payment = Payment::where('order_id', $orderId)->first();
-            if (!$payment) {
-                Log::error("Payment with order_id $orderId not found.");
-                return response()->json(['error' => 'Payment not found.'], 404);
-            }
-
-            $statusMapping = [
-                'settlement' => 'paid',
-                'capture' => 'paid',
-                'pending' => 'pending',
-                'deny' => 'failed',
-                'cancel' => 'canceled',
-                'expire' => 'expired',
-                'refund' => 'refunded'
-            ];
-            $newStatus = $statusMapping[$transactionStatus] ?? 'unknown';
-
-            $payment->update([
-                'status' => $newStatus,
-                'payment_type' => $paymentType,
-                'response' => json_encode($request->all())
-            ]);
-
-            Log::info("Payment updated successfully for order_id $orderId with status $newStatus.");
-
-            $responseMessages = [
-                'paid' => 'Payment successful.',
-                'pending' => 'Payment is pending. Please wait for confirmation.',
-                'failed' => 'Payment failed. Please try again.',
-                'canceled' => 'Payment has been canceled.',
-                'expired' => 'Payment has expired. Please make a new transaction.',
-                'refunded' => 'Payment has been refunded.',
-                'unknown' => 'Payment status is unknown. Please contact support.'
-            ];
-
-            return response()->json([
-                'message' => $responseMessages[$newStatus] ?? 'Payment status updated.'
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Midtrans Notification Error: " . $e->getMessage());
-            return response()->json(['error' => 'Failed to process notification.'], 500);
+        $payment = Payment::where('order_id', $orderId)->first();
+        if (!$payment) {
+            Log::error("Payment with order_id $orderId not found.");
+            return response()->json(['error' => 'Payment not found.'], 404);
         }
+
+        $statusMapping = [
+            'settlement' => 'paid',
+            'capture' => 'paid',
+            'pending' => 'pending',
+            'deny' => 'failed',
+            'cancel' => 'canceled',
+            'expire' => 'expired',
+            'refund' => 'refunded'
+        ];
+        $newStatus = $statusMapping[$transactionStatus] ?? 'unknown';
+
+        $payment->update([
+            'status' => $newStatus,
+            'payment_type' => $paymentType,
+            'response' => json_encode([
+                'transaction_status' => $transactionStatus,
+                'order_id' => $orderId,
+                'payment_type' => $paymentType,
+                'transaction_time' => $transactionTime,
+                'settlement_time' => $settlementTime,
+                'gross_amount' => $grossAmount
+            ])
+        ]);
+
+        Log::info("Payment updated successfully for order_id $orderId with status $newStatus.");
+
+        $responseMessages = [
+            'paid' => 'Payment successful.',
+            'pending' => 'Payment is pending. Please wait for confirmation.',
+            'failed' => 'Payment failed. Please try again.',
+            'canceled' => 'Payment has been canceled.',
+            'expired' => 'Payment has expired. Please make a new transaction.',
+            'refunded' => 'Payment has been refunded.',
+            'unknown' => 'Payment status is unknown. Please contact support.'
+        ];
+
+        return response()->json([
+            'message' => $responseMessages[$newStatus] ?? 'Payment status updated.'
+        ]);
+    } catch (\Exception $e) {
+        Log::error("Midtrans Notification Error: " . $e->getMessage());
+        return response()->json(['error' => 'Failed to process notification.'], 500);
     }
+}
+
 
     public function history()
     {

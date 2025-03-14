@@ -122,7 +122,8 @@ class JobsInController extends Controller
     public function show($id)
     {
         try{
-        $jobsIn = jobsIn::find($id);
+        $jobsIn = jobsIn::with(['company', 'disability', 'education', 'experience', 'type', 'policy'])->find($id);
+
 
         if (!$jobsIn) {
             return response()->json(['message' => 'Job not found'], 404);

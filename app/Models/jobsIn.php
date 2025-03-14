@@ -34,35 +34,36 @@ class jobsIn extends Model
         ];
     }
 
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
-    }
+        public function company()
+        {
+            return $this->belongsTo(Company::class, 'company_name');
+        }
 
-    public function experience()
-    {
-        return $this->belongsTo(Experience::class);
-    }
+        public function disability()
+        {
+            return $this->belongsTo(Disability::class, 'disability_type');
+        }
 
-    public function disability()
-    {
-        return $this->belongsTo(Disability::class);
-    }
+        public function education()
+        {
+            return $this->belongsTo(Education::class, 'education_level');
+        }
 
-    public function education()
-    {
-        return $this->belongsTo(Education::class);
-    }
+        public function experience()
+        {
+            return $this->belongsTo(Experience::class, 'experience_duration');
+        }
 
-    public function type()
-    {
-        return $this->belongsTo(Type::class);
-    }
+        public function type()
+        {
+            return $this->belongsTo(Type::class, 'type_duration');
+        }
 
-    public function policy()
-    {
-        return $this->belongsTo(Policy::class);
-    }
+        public function policy()
+        {
+            return $this->belongsTo(Policy::class, 'policy_location');
+        }
+
     public function applications()
     {
         return $this->hasMany(Application::class, 'jobs_id');
