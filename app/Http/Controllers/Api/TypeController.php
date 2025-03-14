@@ -13,7 +13,7 @@ class TypeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
         $this->middleware('admin')->only(['store', 'update', 'destroy']);
     }
 
