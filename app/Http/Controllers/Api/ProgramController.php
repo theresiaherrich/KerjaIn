@@ -25,7 +25,7 @@ class ProgramController extends Controller
 
             $programs = Program::search($search)
                 ->orderBy('created_at', 'desc')
-                ->paginate(10);
+                ->paginate(8);
 
             return response()->json([
                 'message' => 'List Data Program',

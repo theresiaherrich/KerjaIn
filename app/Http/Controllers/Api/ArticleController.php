@@ -22,7 +22,7 @@ class ArticleController extends Controller
     public function index()
     {
         try{
-            $Article = Article::latest()->paginate(5);
+            $Article = Article::latest()->paginate(4);
 
             return new ArticleResource( 'List Data Article', $Article);
         } catch (Exception $e) {

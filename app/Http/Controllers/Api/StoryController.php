@@ -21,7 +21,7 @@ class StoryController extends Controller
     public function index()
     {
         try{
-            $Story = Story::latest()->paginate(5);
+            $Story = Story::latest()->paginate(3);
 
             return new StoryResource( 'List Data Story', $Story);
         } catch (Exception $e) {

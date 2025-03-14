@@ -21,7 +21,7 @@ class TestimonyController extends Controller
     public function index()
     {
         try{
-            $Testimony = Testimony::latest()->paginate(5);
+            $Testimony = Testimony::latest()->paginate(4);
 
             return new TestimonyResource( 'List Data Testimony', $Testimony);
         } catch (Exception $e) {

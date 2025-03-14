@@ -63,7 +63,7 @@ class JobsInController extends Controller
 
                 $jobsIn = $jobsIn->with(['company','disability','education', 'experience','type','policy'])
                                 ->latest()
-                                ->paginate(5);
+                                ->paginate(8);
 
                 return new jobsInResource('List Data jobsIn', $jobsIn);
             } catch (Exception $e) {
