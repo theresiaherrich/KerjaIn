@@ -121,7 +121,7 @@ class CompanyController extends Controller
 
             $Company->delete();
 
-            return new CompanyResource(true, 'Data Company Berhasil Dihapus!', null);
+            return new CompanyResource( 'Data Company Berhasil Dihapus!', null);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
