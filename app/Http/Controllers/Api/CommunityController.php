@@ -15,7 +15,7 @@ class CommunityController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['index', 'show']]);
-        $this->middleware('admin')->only(['store', 'update', 'destroy', 'index']);
+        $this->middleware('admin')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

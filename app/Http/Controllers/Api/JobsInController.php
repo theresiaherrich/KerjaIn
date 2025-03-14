@@ -137,6 +137,7 @@ class JobsInController extends Controller
                 'salary'        => $jobsIn->salary,
                 'location'      => $jobsIn->location,
                 'company_name'  => $jobsIn->company ? $jobsIn->company->name : null,
+                'company_logo'  => $jobsIn->company ? $jobsIn->company->logo : null,
                 'disability_type' => $jobsIn->disability ? $jobsIn->disability->type : null,
                 'education_level'  => $jobsIn->education ? $jobsIn->education->level : null,
                 'experience_duration' => $jobsIn->experience ? $jobsIn->experience->duration : null,

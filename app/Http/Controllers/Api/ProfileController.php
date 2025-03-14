@@ -35,11 +35,14 @@ class ProfileController extends Controller
             $supabaseUrl = env('SUPABASE_URL');
             $bucketName = env('SUPABASE_BUCKET', 'files');
 
+            $defaultImage = "$supabaseUrl/storage/v1/object/public/$bucketName/files/default.png";
+
             $imageUrl = $profile->image
                 ? (str_starts_with($profile->image, 'http')
                     ? $profile->image
                     : "$supabaseUrl/storage/v1/object/public/$bucketName/" . $profile->image)
-                : null;
+                : $defaultImage;
+
 
             return response()->json([
                 'message' => 'Profile berhasil diambil',
@@ -107,13 +110,16 @@ class ProfileController extends Controller
                 }
             }
 
-            $imagePath = $profile->image;
+            $supabaseUrl = env('SUPABASE_URL');
+            $bucketName = env('SUPABASE_BUCKET', 'files');
+            $defaultImage = "$supabaseUrl/storage/v1/object/public/$bucketName/files/default.png";
+
+            $imagePath = $profile->image ?: $defaultImage;
 
             if ($request->hasFile('image')) {
                 if ($profile->image && $profile->image !== 'default.png') {
                     $this->deleteFromSupabase($profile->image);
                 }
-
                 $imagePath = $this->uploadToSupabase($request->file('image'));
             }
 
